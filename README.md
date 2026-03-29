@@ -52,3 +52,15 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Testing PawPal+
+
+Automated tests in `tests/test_pawpal.py` exercise the core domain logic: task completion and pet task lists; chronological sorting (`sort_by_time`); daily and weekly recurrence after `mark_task_complete`; conflict detection for duplicate date/time slots; filtering by pet name and completion status; and edge cases such as pets with no tasks and daily task filtering by date.
+
+From the project root (with your virtual environment activated):
+
+```bash
+python -m pytest
+```
+
+**Reliability confidence:** ★★★★☆ (4/5) — Core scheduling and data-model behavior is covered by pytest; the Streamlit UI and full integration paths are not automated here.
