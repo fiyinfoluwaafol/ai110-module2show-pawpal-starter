@@ -118,6 +118,7 @@ class Scheduler:
     """
 
     def __init__(self, owner: Owner) -> None:
+        """Attach an owner and initialize empty constraints and schedule."""
         self._owner = owner
         self.constraints: dict[str, Any] = {}
         self.schedule: dict[str, Any] = {}
@@ -128,10 +129,7 @@ class Scheduler:
         return self._owner.get_all_tasks()
 
     def generate_daily_plan(self, on_date: date) -> None:
-        """
-        Create a prioritized set of tasks for the given day and store it in
-        ``schedule`` (uses pet daily tasks, sort by time_window, then priority).
-        """
+        """Build a prioritized daily plan from pet tasks and store it in ``schedule``."""
         day_tasks: list[Task] = []
         for pet in self._owner.pets:
             day_tasks.extend(pet.get_daily_tasks(on_date))
@@ -197,6 +195,7 @@ class Scheduler:
         return result
 
     def _tasks_for_pet_named(self, pet_name: str) -> list[Task]:
+        """Return tasks for the pet named ``pet_name``, or an empty list if not found."""
         for pet in self._owner.pets:
             if pet.name == pet_name:
                 return list(pet.tasks)
@@ -213,10 +212,7 @@ class Scheduler:
         return [group for group in buckets.values() if len(group) >= 2]
 
     def mark_task_complete(self, task: Task) -> None:
-        """
-        Mark a task complete. If recurring (daily/weekly), append the next
-        occurrence as a new task on the same pet.
-        """
+        """Mark the task complete and, if recurring, enqueue the next occurrence on the same pet."""
         pet = self._find_pet_containing(task)
         if pet is None:
             return
@@ -244,6 +240,7 @@ class Scheduler:
         pet.add_task(successor)
 
     def _find_pet_containing(self, task: Task) -> Optional[Pet]:
+        """Return the pet whose task list includes ``task``, or None."""
         for pet in self._owner.pets:
             if task in pet.tasks:
                 return pet
