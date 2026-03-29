@@ -5,6 +5,11 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+Three core actions that a user should be able to do with PawPal+ are:
+- Add their pet(s) to a dashboard, to be able to manage their pets. This will allow the user to see basic info about the pet such as name, maybe picture, animal, etc.
+- Within the space for a given pet, the user should be able to view a simple overview of tasks related to the care for that pet, ideally for a specified timeframe (likely on a daily cadence). Could possibly have a calendar for less frequent tasks such as doctor check-up so the option to still view it is there but the default and also a good MVP feature is just on a day-to-day basis
+- The user should be able to add care tasks, we can start with a simple walk. Can maybe proceed to have different types of tasks, such as grooming, health checkups, medication reminder, feeding, etc.
+
 - What classes did you include, and what responsibilities did you assign to each?
 
 **b. Design changes**
