@@ -124,7 +124,14 @@ classDiagram
 **b. Design changes**
 
 - Did your design change during implementation?
+
+Yes. A few details evolved once the classes were implemented in code.
+
 - If yes, describe at least one change and why you made it.
+
+The clearest change is on **Task**. The original UML lists `time_window`, `mark_complete`, and `is_due(date)`, but it does not say how a single task object should represent “this walk on *this* day” versus the same walk on another day. To make `get_daily_tasks(date)` and conflict detection (same day + same time) well-defined, each task instance now carries an **`occurrence_date`**. For **recurring** care (daily or weekly), the implementation also adds an optional **`frequency`** field. When a recurring task is marked complete, the scheduler creates a *new* `Task` with the next date instead of overloading one row for every day. That keeps the UML’s `Task` fields for title, duration, and priority, while making scheduling and recurrence behavior testable and predictable.
+
+A smaller structural change: **`Scheduler.tasks`** in code is not a separate list you edit by hand; it is derived from the **Owner** (all tasks on all pets), which matches the idea that the scheduler works across pets but avoids duplicating data in two places. **`Owner.get_all_tasks()`** was added as a convenience for that aggregation even though it was not on the first UML diagram.
 
 ---
 
