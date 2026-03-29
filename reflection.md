@@ -73,6 +73,7 @@ Here are the main objects needed for the system and an outline of their attribut
 
 ```mermaid
 classDiagram
+    %% tasks on Scheduler is a read-only property (aggregates Owner.get_all_tasks())
     class Pet {
         +String name
         +String animal
@@ -88,8 +89,10 @@ classDiagram
         +String description
         +int duration
         +String priority
-        +String time_window
+        +Optional time_window
         +bool completed
+        +date occurrence_date
+        +Optional frequency
         +mark_complete()
         +is_due(date)
     }
@@ -101,6 +104,7 @@ classDiagram
         +add_pet(pet)
         +get_pets()
         +set_preferences(preferences)
+        +get_all_tasks()
     }
 
     class Scheduler {
@@ -111,12 +115,16 @@ classDiagram
         +explain_plan()
         +update_constraints(new_constraints)
         +reschedule_task(task, new_time)
+        +get_all_tasks()
+        +sort_by_time(tasks)
+        +filter_tasks(tasks, completed, pet_name)
+        +detect_conflicts(tasks)
+        +mark_task_complete(task)
     }
 
     Owner "1" --> "0..*" Pet : owns
     Pet "1" --> "0..*" Task : has
-    Scheduler "1" --> "0..*" Task : schedules
-    Scheduler ..> Owner : uses preferences
+    Scheduler --> Owner : uses
 ```
 
 
