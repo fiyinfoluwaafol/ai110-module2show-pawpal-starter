@@ -11,6 +11,65 @@ Three core actions that a user should be able to do with PawPal+ are:
 - The user should be able to add care tasks, we can start with a simple walk. Can maybe proceed to have different types of tasks, such as grooming, health checkups, medication reminder, feeding, etc.
 
 - What classes did you include, and what responsibilities did you assign to each?
+Here are the main objects needed for the system and an outline of their attributes and methods:
+
+### 1. Pet
+**Attributes:**
+- `name`: The pet's name
+- `animal`: The type/species of pet (e.g., dog, cat)
+- `image`: A photo or avatar representing the pet
+- `tasks`: List of care tasks assigned to this pet
+
+**Methods:**
+- `add_task(task)`: Assign a new task to this pet
+- `get_tasks()`: Retrieve all tasks for this pet
+- `get_daily_tasks(date)`: Get tasks specific to a certain day
+
+---
+
+### 2. Task
+**Attributes:**
+- `title`: Name of the task (e.g., "Walk")
+- `description`: Details about the task
+- `duration`: Estimated time needed to complete the task (e.g., in minutes)
+- `priority`: How important the task is (e.g., high/medium/low, or numeric)
+- `time_window`: Preferred or scheduled time for task (optional)
+- `completed`: Whether the task has been completed
+
+**Methods:**
+- `mark_complete()`: Set the task as done
+- `is_due(date)`: Check if the task is due on a given date
+
+---
+
+### 3. Owner
+**Attributes:**
+- `name`: The owner's name
+- `pets`: List of pets owned by the user
+- `preferences`: Preferences or constraints (e.g., available time, preferred routines)
+
+**Methods:**
+- `add_pet(pet)`: Add a new pet to the owner profile
+- `get_pets()`: Retrieve a list of all owned pets
+- `set_preferences(preferences)`: Update owner scheduling or task preferences
+
+---
+
+### 4. Scheduler
+**Attributes:**
+- `tasks`: All tasks needing to be scheduled (could be across pets)
+- `constraints`: Any scheduling constraints (e.g., owner's time limits, pet needs)
+- `schedule`: The computed plan for the day
+
+**Methods:**
+- `generate_daily_plan(date)`: Create a prioritized and feasible set of tasks for the given day, considering constraints and priorities
+- `explain_plan()`: Provide a rationale or explanation for the generated schedule
+- `update_constraints(new_constraints)`: Modify scheduling parameters (e.g., owner's available time)
+- `reschedule_task(task, new_time)`: Change the timing of a given task
+
+---
+
+
 
 **b. Design changes**
 
