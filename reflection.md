@@ -69,6 +69,56 @@ Here are the main objects needed for the system and an outline of their attribut
 
 ---
 
+### Mermaid Class Diagram
+
+```mermaid
+classDiagram
+    class Pet {
+        +String name
+        +String animal
+        +String image
+        +List~Task~ tasks
+        +add_task(task)
+        +get_tasks()
+        +get_daily_tasks(date)
+    }
+
+    class Task {
+        +String title
+        +String description
+        +int duration
+        +String priority
+        +String time_window
+        +bool completed
+        +mark_complete()
+        +is_due(date)
+    }
+
+    class Owner {
+        +String name
+        +List~Pet~ pets
+        +Map preferences
+        +add_pet(pet)
+        +get_pets()
+        +set_preferences(preferences)
+    }
+
+    class Scheduler {
+        +List~Task~ tasks
+        +Map constraints
+        +Map schedule
+        +generate_daily_plan(date)
+        +explain_plan()
+        +update_constraints(new_constraints)
+        +reschedule_task(task, new_time)
+    }
+
+    Owner "1" --> "0..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler "1" --> "0..*" Task : schedules
+    Scheduler ..> Owner : uses preferences
+```
+
 
 
 **b. Design changes**
