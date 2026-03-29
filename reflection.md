@@ -142,10 +142,30 @@ A smaller structural change: **`Scheduler.tasks`** in code is not a separate lis
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+The scheduler works with several kinds of information, but not all of them are enforced the same way.
+
+**What it considers**
+
+- **Calendar / “what is due today”:** `generate_daily_plan(on_date)` only pulls tasks whose `occurrence_date` matches that day (`Pet.get_daily_tasks` / `Task.is_due`), so the plan is scoped to a single calendar date.
+- **Priority:** The daily plan is **ordered by priority first** (high before medium before low via `_priority_rank`), then by date, then by `time_window`. So for “what to do first today,” **priority is the main ordering rule** inside that day’s list.
+- **Time:** `sort_by_time` orders tasks by `occurrence_date` and clock time (`HH:MM`). That is the natural order for a timeline view and for spotting same-slot issues.
+- **Owner preferences and generic constraints:** `Owner.preferences` and `Scheduler.constraints` are **stored** and copied into the generated `schedule` dict so they travel with the plan, but they **do not automatically reorder or block** tasks in code. They are hooks for a richer scheduler later (for example, “only morning walks”).
+- **Completion and pet:** Filtering by `completed` and `pet_name` helps views and demos; it does not change the core sort order of the daily plan.
+
+**What mattered most and why**
+
+For this assignment, **priority first** in `generate_daily_plan` matches the idea that urgent care (medication, high-priority items) should appear before lower-priority chores when you read the plan. **Date and time** matter next so the list still feels chronological after priority is applied. I did **not** try to encode every real-world constraint (travel time, pet anxiety, weather) because that would overshoot a lightweight class project; keeping preferences and constraints as **data** keeps the design honest: the structure is there even if the engine does not optimize on it yet.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+**Tradeoff: exact-time conflict detection vs. overlap-by-duration**
+
+`detect_conflicts` groups tasks by **same calendar day and same `time_window` string** (exact match, e.g. two tasks both at `"09:00"`). It does **not** look at whether two tasks’ **time intervals** overlap (for example, a 45-minute task starting at 08:45 and a 30-minute task at 09:00).
+
+That tradeoff is reasonable here because the app models tasks with a **single scheduled time** and a duration mainly for display, not for interval math. Exact matching is easy to explain, test, and debug, and it catches the clearest user mistakes (double-booking the same slot). Full overlap detection would need start + duration converted to real time ranges and more edge-case handling for little benefit in a small demo. If PawPal grew into a product with long blocks of care, I would revisit this and treat each task as a `[start, start + duration)` interval on a timeline.
 
 ---
 

@@ -173,7 +173,12 @@ class Scheduler:
         return self._owner.get_all_tasks()
 
     def sort_by_time(self, tasks: list[Task]) -> list[Task]:
-        """Return tasks sorted by occurrence date, then by time_window (HH:MM)."""
+        """
+        Sort tasks chronologically by date and time.
+
+        Uses Python's sorted() with a tuple key: (occurrence_date, parsed time).
+        Tasks without a time_window are placed at the end of their day.
+        """
         return sorted(
             tasks,
             key=lambda t: (t.occurrence_date, _time_sort_key_optional(t.time_window)),
@@ -185,7 +190,16 @@ class Scheduler:
         completed: Optional[bool] = None,
         pet_name: Optional[str] = None,
     ) -> list[Task]:
-        """Filter by completion status and/or by pet name."""
+        """
+        Filter tasks by completion status and/or pet name.
+
+        Args:
+            tasks: List of tasks to filter.
+            completed: If True, keep only completed; if False, only incomplete.
+            pet_name: If provided, keep only tasks belonging to that pet.
+
+        Both filters can be combined. Returns a new filtered list.
+        """
         result = list(tasks)
         if completed is not None:
             result = [t for t in result if t.completed is completed]
@@ -202,7 +216,13 @@ class Scheduler:
         return []
 
     def detect_conflicts(self, tasks: list[Task]) -> list[list[Task]]:
-        """Return groups of two or more tasks sharing the same date and time_window."""
+        """
+        Detect scheduling conflicts (exact time match).
+
+        Groups tasks by (date, time_window) and returns groups with 2+ tasks.
+        This is a lightweight approach: only exact time matches are flagged,
+        not overlapping durations.
+        """
         buckets: dict[tuple[date, str], list[Task]] = {}
         for task in tasks:
             if task.time_window is None:
@@ -212,7 +232,13 @@ class Scheduler:
         return [group for group in buckets.values() if len(group) >= 2]
 
     def mark_task_complete(self, task: Task) -> None:
-        """Mark the task complete and, if recurring, enqueue the next occurrence on the same pet."""
+        """
+        Mark a task complete and handle recurrence.
+
+        If the task has frequency "daily" or "weekly", a new Task is created
+        for the next occurrence (using timedelta) and added to the same pet.
+        Only one future task is created per completion to avoid infinite chains.
+        """
         pet = self._find_pet_containing(task)
         if pet is None:
             return
