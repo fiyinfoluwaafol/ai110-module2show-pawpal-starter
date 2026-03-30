@@ -32,7 +32,6 @@ Your final app should:
 - **CLI demo** — `main.py` prints unsorted vs. sorted tasks, conflict groups, filter examples, and recurring completion in the terminal.
 
 ### Demo
-Insert Screenshot here
 <a href="/course_images/ai110/demo.png" target="_blank"><img src='demo.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
 
 ## Smarter Scheduling
