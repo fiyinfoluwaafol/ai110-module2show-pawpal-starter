@@ -22,6 +22,20 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+### Features
+- **Chronological task ordering** — `Scheduler.sort_by_time()` orders tasks by `occurrence_date` and clock time (`HH:MM`); tasks without a time window are listed after timed tasks on the same day.
+- **Filtering** — `filter_tasks()` narrows lists by **pet name**, **completion status** (pending vs. done), or both, so views stay focused in the UI and in code.
+- **Same-time conflict detection** — `detect_conflicts()` groups tasks that share the **same date and exact time string** and surfaces them for warnings (see *Smarter Scheduling* for scope).
+- **Recurring tasks** — Tasks with `frequency` `"daily"` or `"weekly"` can be completed through `mark_task_complete()`, which marks the instance done and appends **one** next occurrence to the same pet (via `timedelta`).
+- **Daily plan generation** — `generate_daily_plan(date)` builds a day’s plan from tasks due that date, ordered by **priority** (high → medium → low), then date and time; `explain_plan()` returns a readable summary.
+- **Streamlit app** — Add pets and tasks, see filtered/sorted schedules, conflict alerts, mark tasks complete (including recurrence), and generate a daily plan for a chosen date.
+- **CLI demo** — `main.py` prints unsorted vs. sorted tasks, conflict groups, filter examples, and recurring completion in the terminal.
+
+### Demo
+Insert Screenshot here
+<a href="/course_images/ai110/your_screenshot_name.png" target="_blank"><img src='/course_images/ai110/your_screenshot_name.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+
+
 ## Smarter Scheduling
 
 The `Scheduler` in `pawpal_system.py` adds a lightweight **algorithmic layer** on top of tasks and pets:
