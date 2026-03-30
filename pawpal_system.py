@@ -6,6 +6,24 @@ from typing import Any, Literal, Optional
 
 Frequency = Optional[Literal["daily", "weekly"]]
 
+PRIORITY_EMOJI: dict[str, str] = {"high": "🔴", "medium": "🟡", "low": "🟢"}
+
+TASK_TYPE_EMOJI: dict[str, str] = {
+    "walk": "🚶",
+    "feed": "🍽️",
+    "play": "🎾",
+    "groom": "✂️",
+    "medication": "💊",
+    "vet": "🏥",
+    "train": "🎓",
+    "bath": "🛁",
+}
+
+
+def task_type_icon(title: str) -> str:
+    """Return an emoji for well-known task titles, or a generic paw."""
+    return TASK_TYPE_EMOJI.get(title.lower().strip(), "🐾")
+
 
 def _parse_hh_mm(time_str: str) -> tuple[int, int]:
     """Parse 'HH:MM' into (hour, minute). Raises ValueError if invalid."""
@@ -54,10 +72,12 @@ class Task:
         """Readable representation of the task."""
         tw = self.time_window or "unspecified time"
         freq = self.frequency or "one-off"
-        status = "done" if self.completed else "pending"
+        status = "✅ done" if self.completed else "⏳ pending"
+        emoji = PRIORITY_EMOJI.get(self.priority.lower(), "")
+        icon = task_type_icon(self.title)
         return (
-            f"{self.title}: {self.description} @ {tw} on {self.occurrence_date.isoformat()} "
-            f"({self.priority}, {freq}, {status})"
+            f"{icon} {self.title}: {self.description} @ {tw} on {self.occurrence_date.isoformat()} "
+            f"({emoji} {self.priority}, {freq}, {status})"
         )
 
 
@@ -182,6 +202,23 @@ class Scheduler:
         return sorted(
             tasks,
             key=lambda t: (t.occurrence_date, _time_sort_key_optional(t.time_window)),
+        )
+
+    def sort_by_priority(self, tasks: list[Task]) -> list[Task]:
+        """
+        Sort tasks by priority first (High > Medium > Low), then by time.
+
+        This is the advanced scheduling strategy: urgent tasks surface to the
+        top regardless of their scheduled time, with time as a tiebreaker
+        within the same priority level.
+        """
+        return sorted(
+            tasks,
+            key=lambda t: (
+                _priority_rank(t.priority),
+                t.occurrence_date,
+                _time_sort_key_optional(t.time_window),
+            ),
         )
 
     def filter_tasks(

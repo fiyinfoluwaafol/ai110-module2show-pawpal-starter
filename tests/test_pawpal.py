@@ -8,7 +8,7 @@ and basic CRUD operations on Task, Pet, Owner, and Scheduler classes.
 import pytest
 from datetime import date, timedelta
 
-from pawpal_system import Task, Pet, Owner, Scheduler
+from pawpal_system import Task, Pet, Owner, Scheduler, PRIORITY_EMOJI, task_type_icon
 
 
 # =============================================================================
@@ -537,6 +537,99 @@ def test_pet_with_no_tasks_does_not_break_scheduler():
     filtered = scheduler.filter_tasks(all_tasks, pet_name="NewPet")
     assert filtered == []
 
+
+# =============================================================================
+# TEST: Priority-Based Scheduling (Challenge 3)
+# =============================================================================
+
+def test_sort_by_priority_high_before_medium_before_low():
+    """Verify tasks are ordered High > Medium > Low, with time as tiebreaker."""
+    owner = Owner(name="Test Owner")
+    pet = Pet(name="Max", animal="Dog", image="max.png")
+    owner.add_pet(pet)
+
+    today = date.today()
+
+    task_low = Task(
+        title="Play", description="Ball", duration=15,
+        priority="low", time_window="08:00", occurrence_date=today,
+    )
+    task_high = Task(
+        title="Medication", description="Pill", duration=5,
+        priority="high", time_window="12:00", occurrence_date=today,
+    )
+    task_medium = Task(
+        title="Feed", description="Lunch", duration=10,
+        priority="medium", time_window="10:00", occurrence_date=today,
+    )
+
+    pet.add_task(task_low)
+    pet.add_task(task_high)
+    pet.add_task(task_medium)
+
+    scheduler = Scheduler(owner)
+    result = scheduler.sort_by_priority(scheduler.get_all_tasks())
+
+    assert result[0] is task_high
+    assert result[1] is task_medium
+    assert result[2] is task_low
+
+
+def test_sort_by_priority_same_priority_sorts_by_time():
+    """Within the same priority level, earlier times come first."""
+    owner = Owner(name="Test Owner")
+    pet = Pet(name="Max", animal="Dog", image="max.png")
+    owner.add_pet(pet)
+
+    today = date.today()
+
+    task_late = Task(
+        title="Walk", description="Evening", duration=30,
+        priority="high", time_window="18:00", occurrence_date=today,
+    )
+    task_early = Task(
+        title="Medication", description="Morning pill", duration=5,
+        priority="high", time_window="07:00", occurrence_date=today,
+    )
+
+    pet.add_task(task_late)
+    pet.add_task(task_early)
+
+    scheduler = Scheduler(owner)
+    result = scheduler.sort_by_priority(scheduler.get_all_tasks())
+
+    assert result[0] is task_early
+    assert result[1] is task_late
+
+
+# =============================================================================
+# TEST: Priority emojis and task-type icons (Challenge 3 / 4)
+# =============================================================================
+
+def test_priority_emoji_mapping():
+    """Verify the PRIORITY_EMOJI dict contains the expected symbols."""
+    assert PRIORITY_EMOJI["high"] == "🔴"
+    assert PRIORITY_EMOJI["medium"] == "🟡"
+    assert PRIORITY_EMOJI["low"] == "🟢"
+
+
+def test_task_type_icon_known_titles():
+    """Known task titles should return their specific emoji."""
+    assert task_type_icon("Walk") == "🚶"
+    assert task_type_icon("feed") == "🍽️"
+    assert task_type_icon("MEDICATION") == "💊"
+    assert task_type_icon("Groom") == "✂️"
+    assert task_type_icon("Play") == "🎾"
+
+
+def test_task_type_icon_unknown_title_returns_paw():
+    """Unknown task titles should fall back to the paw emoji."""
+    assert task_type_icon("CustomStuff") == "🐾"
+
+
+# =============================================================================
+# TEST: Daily tasks by date
+# =============================================================================
 
 def test_get_daily_tasks_returns_only_tasks_for_specified_date():
     """Verify that get_daily_tasks filters by the correct date."""

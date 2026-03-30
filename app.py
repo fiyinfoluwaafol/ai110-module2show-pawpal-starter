@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import date
 
-from pawpal_system import Owner, Pet, Scheduler, Task
+from pawpal_system import Owner, Pet, Scheduler, Task, PRIORITY_EMOJI, task_type_icon
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -152,8 +152,16 @@ st.markdown("""
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
+.task-card.priority-high { border-left: 4px solid #E17055; }
+.task-card.priority-medium { border-left: 4px solid #FDCB6E; }
+.task-card.priority-low { border-left: 4px solid #00B894; }
 .task-card.done {
     opacity: 0.55;
+}
+.task-type-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    margin-top: 2px;
 }
 .task-time {
     background: #F0EFFF;
@@ -476,7 +484,7 @@ else:
                 unsafe_allow_html=True,
             )
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     pet_names = ["All Pets"] + [p.name for p in owner.get_pets()]
     with col1:
         filter_pet = st.selectbox("Filter by pet", pet_names, key="filter_pet", label_visibility="collapsed")
@@ -487,6 +495,13 @@ else:
             key="filter_status",
             label_visibility="collapsed",
         )
+    with col3:
+        sort_mode = st.selectbox(
+            "Sort by",
+            ["⏰ Time", "🔴 Priority"],
+            key="sort_mode",
+            label_visibility="collapsed",
+        )
 
     pet_arg = None if filter_pet == "All Pets" else filter_pet
     completed_arg = (
@@ -494,7 +509,10 @@ else:
     )
 
     visible_tasks = scheduler.filter_tasks(all_tasks, completed=completed_arg, pet_name=pet_arg)
-    visible_tasks = scheduler.sort_by_time(visible_tasks)
+    if sort_mode == "🔴 Priority":
+        visible_tasks = scheduler.sort_by_priority(visible_tasks)
+    else:
+        visible_tasks = scheduler.sort_by_time(visible_tasks)
 
     if not visible_tasks:
         st.caption("No tasks match the current filters.")
@@ -512,27 +530,31 @@ else:
         for t in visible_tasks:
             pet_name_for_task = _task_pet.get(id(t), "Unknown")
             done_class = " done" if t.completed else ""
+            pri_class = f" priority-{t.priority}" if not t.completed else ""
             time_display = t.time_window or "—"
             priority_class = f"badge-{t.priority}"
+            pri_emoji = PRIORITY_EMOJI.get(t.priority.lower(), "")
+            type_icon = task_type_icon(t.title)
             status_badge = (
-                '<span class="badge badge-done">✓ Done</span>'
+                '<span class="badge badge-done">✅ Done</span>'
                 if t.completed
-                else '<span class="badge badge-pending">Pending</span>'
+                else '<span class="badge badge-pending">⏳ Pending</span>'
             )
             freq_badge = (
-                f'<span class="badge badge-freq">{t.frequency}</span>'
+                f'<span class="badge badge-freq">🔁 {t.frequency}</span>'
                 if t.frequency
                 else ""
             )
             st.markdown(f"""
-            <div class="task-card{done_class}">
+            <div class="task-card{done_class}{pri_class}">
+                <div class="task-type-icon">{type_icon}</div>
                 <div class="task-time">{time_display}</div>
                 <div class="task-body">
                     <div class="task-title">{t.title}</div>
                     <div class="task-desc">{t.description}</div>
                     <div class="task-meta">
                         <span class="badge badge-pet">{pet_name_for_task}</span>
-                        <span class="badge {priority_class}">{t.priority}</span>
+                        <span class="badge {priority_class}">{pri_emoji} {t.priority}</span>
                         {status_badge}
                         {freq_badge}
                     </div>
@@ -567,8 +589,31 @@ with st.expander("🗓️ Daily Plan"):
     plan_date = st.date_input("Date", value=date.today())
     if st.button("Generate daily plan", use_container_width=True):
         scheduler.generate_daily_plan(plan_date)
-        plan_text = scheduler.explain_plan()
-        if "No plan" in plan_text:
+        plan_tasks = scheduler.schedule.get("tasks", [])
+        if not plan_tasks:
             st.caption("No tasks scheduled for this date.")
         else:
-            st.code(plan_text, language=None)
+            st.markdown(
+                f'<div class="section-header">Plan for {plan_date.strftime("%B %d, %Y")}</div>',
+                unsafe_allow_html=True,
+            )
+            for t in plan_tasks:
+                pri_emoji = PRIORITY_EMOJI.get(t.priority.lower(), "")
+                icon = task_type_icon(t.title)
+                tw = t.time_window or "anytime"
+                pet_label = _task_pet.get(id(t), "")
+                st.markdown(
+                    f"""<div class="task-card priority-{t.priority}">
+                        <div class="task-type-icon">{icon}</div>
+                        <div class="task-time">{tw}</div>
+                        <div class="task-body">
+                            <div class="task-title">{t.title}</div>
+                            <div class="task-meta">
+                                <span class="badge badge-pet">{pet_label}</span>
+                                <span class="badge badge-{t.priority}">{pri_emoji} {t.priority}</span>
+                                <span class="badge badge-freq">{t.duration} min</span>
+                            </div>
+                        </div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
